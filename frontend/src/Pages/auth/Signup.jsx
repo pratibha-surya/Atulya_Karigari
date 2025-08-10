@@ -1,83 +1,78 @@
-import React, { useState } from "react";
-import axios from "axios";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { signup } from '../../api/auth';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';  
+
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
 
 export default function Signup() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(schema) });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!name || !email || !password) {
-      toast.error("All fields are required.");
-      return;
-    }
-
+  const onSubmit = async (data) => {
     try {
-      setLoading(true);
-      await axios.post("http://localhost:5000/api/v1/auth/signup", {
-        name,
-        email,
-        password,
-      });
-
-      toast.success("Registration successful! You can now login.");
-      setName("");
-      setEmail("");
-      setPassword("");
-      navigate("/login"); 
+      const res = await signup(data);
+      localStorage.setItem('accessToken', res.data.accessToken);
+      toast.success('Signup successful! Please login.');
+      navigate('/login');
     } catch (err) {
-      if (err.response?.data?.message) {
-        toast.error(err.response.data.message);
-      } else {
-        toast.error("Something went wrong. Please try again.");
-      }
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.message || 'Signup failed');
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow-md">
-      <h2 className="text-3xl font-semibold mb-6 text-center">Sign Up</h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
+      >
+        <h2 className="text-2xl font-semibold mb-4 text-center">Signup</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <input
-          type="text"
-          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          disabled={loading}
-        />
-        <input
-          type="email"
-          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
-        />
-        <input
-          type="password"
-          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-        />
+        <div className="mb-4">
+          <input
+            {...register('email')}
+            placeholder="Email"
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="password"
+            {...register('password')}
+            placeholder="Password"
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
+          )}
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700 transition disabled:opacity-50"
-          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
-          {loading ? "Signing Up..." : "Sign Up"}
+          Signup
         </button>
+
+        <p className="mt-4 text-center text-sm">
+          Already have an account?{' '}
+          <Link to="/login" className="text-blue-600 hover:underline">
+            Login
+          </Link>
+        </p>
       </form>
     </div>
   );

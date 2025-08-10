@@ -7,6 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from './Pages/context/AuthContext.jsx';
 
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>

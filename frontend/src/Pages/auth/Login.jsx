@@ -1,59 +1,80 @@
-import React, { useState, useContext } from "react";
-import { AuthContext } from "../context/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { login } from '../../api/auth';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
+
+const schema = z.object({
+  email: z.string().email(),
+  password: z.string().min(1, 'Password is required'),
+});
 
 export default function Login() {
-  const { login, loading } = useContext(AuthContext);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(schema) });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    const success = await login(email, password);
-
-    if (success) {
-      navigate("/"); 
+  const onSubmit = async (data) => {
+    try {
+      const res = await login(data);
+      localStorage.setItem('accessToken', res.data.accessToken);
+      toast.success('Login successful');
+      navigate('/');
+    } catch (err) {
+      const message = err.response?.data?.message || 'Login failed';
+      toast.error(message);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded shadow-md">
-      <h2 className="text-3xl font-semibold mb-6 text-center">Login</h2>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={loading}
-          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          disabled={loading}
-          className="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-white p-8 rounded shadow-md w-full max-w-sm"
+      >
+        <h2 className="text-2xl font-semibold mb-4 text-center">Login</h2>
+
+        <div className="mb-4">
+          <input
+            {...register('email')}
+            placeholder="Email"
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.email && (
+            <p className="text-red-500 text-sm">{errors.email.message}</p>
+          )}
+        </div>
+
+        <div className="mb-4">
+          <input
+            type="password"
+            {...register('password')}
+            placeholder="Password"
+            className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          {errors.password && (
+            <p className="text-red-500 text-sm">{errors.password.message}</p>
+          )}
+        </div>
+
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
         >
-          {loading ? "Logging in..." : "Login"}
+          Login
         </button>
-      </form>
 
-      <div className="mt-4 text-center">
-        <p className="text-sm text-gray-600">
-          Don't have an account?{" "}
+        <p className="mt-4 text-center text-sm">
+          Don't have an account?{' '}
           <Link to="/signup" className="text-blue-600 hover:underline">
-            Sign up
+            Signup
           </Link>
         </p>
-      </div>
+      </form>
     </div>
   );
 }
