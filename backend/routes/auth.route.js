@@ -1,10 +1,15 @@
+import express from 'express';
 
-import express from "express"
-import { login, logout, register } from "../controller/auth.controller.js"
 
-const router=express()
-router.post("/signup",register)
-router.post("/login",login)
-router.post("/logout",logout)
+import { login, signup } from '../controller/auth.controller.js';
+import authMiddleware from '../middleware/authmeddleware.js';
 
-export default router
+const router = express.Router();
+
+router.post('/signup', signup);
+router.post('/login', login);
+router.get('/protected', authMiddleware, (req, res) => {
+  res.json({ message: 'Access granted', user: req.user });
+});
+
+export default router;
