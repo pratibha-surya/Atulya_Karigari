@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 
 import authRoutes from './routes/auth.route.js';
 import { connectDB } from './config/db.js';
+import cookieParser from 'cookie-parser';
+import errorHandler from './middleware/errorHandler.js';
 
 
 
@@ -31,6 +33,7 @@ app.use(cors())
 
 
 app.use(express.json()); 
+app.use(cookieParser());
 
 
 
@@ -38,6 +41,7 @@ app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 
 app.use('/api/v1/auth', authRoutes);
+app.use(errorHandler)
 
 
 

@@ -1,18 +1,11 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import User from "../models/User.model.js"
-
+import User from '../models/User.model.js';
 import { signupSchema, loginSchema } from '../validators/authValidation.js';
 
 const generateTokens = (userId) => {
-  const accessToken = jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: '15m',
-  });
-
-  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, {
-    expiresIn: '7d',
-  });
-
+  const accessToken = jwt.sign({ id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+  const refreshToken = jwt.sign({ id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
   return { accessToken, refreshToken };
 };
 
@@ -30,12 +23,20 @@ export const signup = async (req, res) => {
     const newUser = await User.create({ email, password: hashed });
 
     const tokens = generateTokens(newUser._id);
-    res.status(201).json({
-      user: { id: newUser._id, email: newUser.email },
-      ...tokens,
-    });
+
+    res
+      .cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .status(201)
+      .json({
+        user: { id: newUser._id, email: newUser.email },
+        accessToken: tokens.accessToken
+      });
   } catch (err) {
-    console.error('Signup error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -54,12 +55,23 @@ export const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
 
     const tokens = generateTokens(user._id);
-    res.json({
-      user: { id: user._id, email: user.email },
-      ...tokens,
-    });
+
+    res
+      .cookie('refreshToken', tokens.refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      })
+      .json({
+        user: { id: user._id, email: user.email },
+        accessToken: tokens.accessToken
+      });
   } catch (err) {
-    console.error('Login error:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
+};
+export const logout = (req, res) => {
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out successfully' });
 };

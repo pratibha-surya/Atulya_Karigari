@@ -4,6 +4,8 @@ import { z } from 'zod';
 import { login } from '../../api/auth';
 import { useNavigate, Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
+
 
 const schema = z.object({
   email: z.string().email(),
@@ -12,6 +14,7 @@ const schema = z.object({
 
 export default function Login() {
   const navigate = useNavigate();
+  const { loginUser } = useAuth(); 
   const {
     register,
     handleSubmit,
@@ -21,7 +24,9 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       const res = await login(data);
-      localStorage.setItem('accessToken', res.data.accessToken);
+      const accessToken = res.data.accessToken;
+
+      loginUser(accessToken); 
       toast.success('Login successful');
       navigate('/');
     } catch (err) {

@@ -10,8 +10,7 @@ import LandingModal from './landing/LandingModal';
 // Auth pages
 import Login from './Pages/auth/Login';
 import Signup from './Pages/auth/Signup';
-import PrivateRoute from './Pages/ProtectedRoute/private';  // ensure this path is correct
-import Protected from './Pages/ProtectedRoute/Protected';
+
 
 function App() {  // renamed from "const function App()"
   const location = useLocation();
