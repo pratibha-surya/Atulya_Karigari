@@ -14,10 +14,10 @@ function App() {
   const [showModal, setShowModal] = useState(true);
   const location = useLocation();
 
-  // Define routes where modal should appear
+  
   const modalRoutes = ['/', '/affordable', '/luxury'];
 
-  // Show modal only if current path is in modalRoutes
+
   const shouldShowModal = modalRoutes.includes(location.pathname) && showModal;
 
   return (
